@@ -1,0 +1,58 @@
+version: "3" 
+
+services:
+  database:
+    image: kartoza/postgis
+    environment:
+      - ALLOW_IP_RANGE=0.0.0.0/0
+      - POSTGRES_USER=docker
+      - POSTGRES_PASSWORD=docker
+      - POSTGRES_DB=docker
+    volumes:
+      - treekit_db_data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    networks:
+      - treekit
+  api:
+    build:
+      context: ./api 
+      dockerfile: Dockerfile 
+    ports:
+      - 3001:3000
+    networks:
+      - treekit
+    volumes:
+      - ./api:/usr/src/app
+  tiler:
+    build:
+      context: ./tiler
+      dockerfile: Dockerfile
+    ports:
+      - "8886:8886"
+    depends_on:
+      - database
+    environment:
+      - PGHOST=database
+      - PGPPORT=5432
+      - PGPASSWORD=docker
+      - PGUSER=docker
+    networks:
+      - treekit
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend:/usr/src/app
+    networks:
+      - treekit
+    ports:
+      - 3000:3000
+
+networks:
+  treekit:
+volumes:
+  treekit_db_data:
+
