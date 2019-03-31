@@ -9,7 +9,7 @@ ENV PATH /usr/src/app/node_modules/.bin:$PATH
 
 # install and cache app dependencies
 COPY package.json /usr/src/app/package.json
-RUN npm install --silent
+RUN  yarn
 
 # start app
-CMD ["node", "index.js"]
+CMD ["./wait-for-it","database:5432","--","yarn","start"]

@@ -1,11 +1,16 @@
-const express = require('express')
-const app = express()
-const port = 3000
+import express from 'express';
+import connect from './db';
+import ProjectRoutes from './routes/Project';
+import NeighborhoodRoutes from './routes/Neighborhood'
+import StreetRoutes from './routes/Street'
+const app = express();
+const port = 3000;
 
-const { Client } = require('pg')
-const client = new Client()
+connect().then(([models, db]) => {
+  app.get('/', (req, res) => res.send('Hello Trees!'));
+  app.use('/projects', ProjectRoutes(models));
+  app.use('/neighborhoods', NeighborhoodRoutes(models));
+  app.use('/streets', StreetRoutes(models));
 
-const connect_db = async()=> await client.connect()
-
-app.get('/', (req, res) => res.send('Hello Trees!'))
-app.listen(port, () => console.log(`Example app listening on port ${port}!`))
+  app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+});
