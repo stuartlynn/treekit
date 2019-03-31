@@ -12,6 +12,18 @@ It consists of
 
 ### Running the app
 
+Clone this REPO 
+
+```bash
+git clone https://github.com/stuartlynn/treekit.git
+cd treekit
+```
+Unzip the data folder so we have some data to play with 
+
+```bash
+tar xzvf data.tar.gz
+```
+
 The application is run using docker-compose with the command 
 
 ```bash
@@ -19,5 +31,11 @@ docker-compose up
 ```
 
 This will spin up the application and you should be able to navigate to [http://localhost:3000](http://localhost:3000) to view it.
+
+Once it's running, we need to import the data we need for testing. Do do this run 
+
+```bash
+./populate_data 
+```
 
 
