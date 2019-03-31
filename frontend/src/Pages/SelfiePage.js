@@ -10,7 +10,7 @@ export default function SelfiePage(props) {
       <Camera
         style={{width:'100%',height:'100%'}}
         onTakePhoto={dataUri => {
-          dispatch({type: 'UPDATE_PROPERTY', payload: {selfie: dataUri}});
+          dispatch({type: 'UPDATE_TREE', payload: {selfie: dataUri}});
           props.navigate('/map_entry');
         }}
       />

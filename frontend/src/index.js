@@ -6,10 +6,13 @@ import App from './App';
 import * as serviceWorker from './serviceWorker';
 
 import {DataEntryProvider} from './Contexts/DataEntryContext';
+import {SavedResultsProvider} from './Contexts/SavedResultsContext';
 
 ReactDOM.render(
   <DataEntryProvider>
-    <App />
+      <SavedResultsProvider>
+        <App />
+      </SavedResultsProvider>
   </DataEntryProvider>,
   document.getElementById('root'),
 );
@@ -18,3 +21,8 @@ ReactDOM.render(
 // unregister() to register() below. Note this comes with some pitfalls.
 // Learn more about service workers: http://bit.ly/CRA-PWA
 serviceWorker.register();
+
+window.addEventListener('load', () => {
+    console.log("loaded Tile Worker")
+    navigator.serviceWorker.register('TileWorker.js');
+})

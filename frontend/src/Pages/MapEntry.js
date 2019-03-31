@@ -5,10 +5,13 @@ import CameraIcon from '@material-ui/icons/Camera';
 import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
 import {DataEntryStore} from '../Contexts/DataEntryContext';
+import {SavedResultsStore} from '../Contexts/SavedResultsContext';
 import DetailsFlow from '../Componets/DetailsFlow';
 
 export default function ManualEntry(props) {
   const [state, dispatch] = useContext(DataEntryStore);
+  const [savedResultsState, savedResultsDispatch] = useContext(SavedResultsStore);
+  const completedStreets  = savedResultsState.streets
   const {circumference, health, selfie, species, stage, location} = state;
 
   const featureStyle = {
@@ -19,7 +22,7 @@ export default function ManualEntry(props) {
     overflowY: 'auto',
     position: 'absolute',
     bottom: '0px',
-    maxHeight: '30%',
+    maxHeight: '50%',
     boxShadow: '0px 0px 13px 3px rgba(0,0,0,0.75)',
     borderRadius: '10px 10px 0px 0px'
   };
@@ -48,24 +51,21 @@ export default function ManualEntry(props) {
         }}
         {...state.map}
         street = {state.street}
+        currentStreetBed= {state.currentStreetBed}
+        streetBeds= {state.streetBeds}
+        completedStreets = {completedStreets}
       />
       <div className="features" style={featureStyle}>
         <DetailsFlow
           stage={stage}
           data={state}
           dispatch={dispatch}
-          onChange={update =>{
-            dispatch({
-                type:'UPDATE_TREE',
-                payload: update
+          onDone={(result)=>{
+            savedResultsDispatch({
+                type: 'ADD_RESULT',
+                payload: result
             })
           }}
-          onSetStage={stage =>
-            dispatch({
-              type: 'SET_STAGE',
-              payload: stage,
-            })
-          }
         />
       </div>
     </div>

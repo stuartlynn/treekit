@@ -15,14 +15,19 @@ import VectorTileSource from 'ol/source/VectorTile.js';
 import {Style, Icon, Fill, Stroke, Circle, Text} from 'ol/style';
 import TileLayer from 'ol/layer/Tile';
 import {fromLonLat, toLonLat} from 'ol/proj';
-import MVT from 'ol/format/MVT.js';
+import {MVT, WKT} from 'ol/format';
 import {Map, View, Observable} from 'ol';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
 import GeoJSON from 'ol/format/GeoJSON.js';
 import FindLocationIcon from '@material-ui/icons/LocationSearching';
 import {defaults as defaultControls, ScaleLine} from 'ol/control';
-import {getGeoJSON, checkNearLine} from '../Utils';
+import {
+  getGeoJSON,
+  constructBedGeometry,
+  deSerializeGeom,
+  serializeGeom,
+} from '../Utils';
 import TargetIcon from '@material-ui/icons/MyLocation';
 
 export default function MapContainer(props) {
@@ -33,8 +38,10 @@ export default function MapContainer(props) {
   const blocksLayer = useRef(null);
   const selectedStreetLayer = useRef(null);
   const activeStreetLayer = useRef(null);
-  const directionLayer= useRef(null);
+  const directionLayer = useRef(null);
   const activeBedLayer = useRef(null);
+  const completedLayer = useRef(null);
+  const bedLayer = useRef(null);
 
   const [blockFeatures, setBlockFeatures] = useState(null);
 
@@ -48,14 +55,17 @@ export default function MapContainer(props) {
     street,
     zoomToExtent,
     interaction,
-    showBlocks
+    showBlocks,
+    currentStreetBed,
+    streetBeds,
+    completedStreets,
   } = props;
 
   // HACK FIX THIS
   const selectStreetActiveRef = useRef(selectStreetActive);
-  useEffect(()=>{
-    selectStreetActiveRef.current = selectStreetActive
-  },[selectStreetActive])
+  useEffect(() => {
+    selectStreetActiveRef.current = selectStreetActive;
+  }, [selectStreetActive]);
 
   const centerMapOnGPS = () => {
     const coords = gps;
@@ -73,7 +83,18 @@ export default function MapContainer(props) {
       const feature = blocksLayer.current
         .getSource()
         .getClosestFeatureToCoordinate(point);
-      props.onStreetSelected(feature);
+      if (feature) {
+        const properties = feature.getProperties();
+        const street = {
+          id: properties.id,
+          length: properties.linelength,
+          extent: feature.getGeometry().getExtent(),
+          geom: serializeGeom(feature),
+        };
+
+        //debugger
+        props.onStreetSelected(street);
+      }
     }
   };
 
@@ -81,17 +102,37 @@ export default function MapContainer(props) {
     if (selectedStreetLayer.current) {
       selectedStreetLayer.current.getSource().clear();
       if (selectedStreet) {
-        selectedStreetLayer.current.getSource().addFeature(selectedStreet);
+        selectedStreetLayer.current
+          .getSource()
+          .addFeature(deSerializeGeom(selectedStreet.geom));
       }
     }
   }, [selectedStreet]);
 
-
-  useEffect(()=>{
-    if(blocksLayer.current){
-        blocksLayer.current.setVisible(showBlocks)
+  useEffect(() => {
+    if (blocksLayer.current) {
+      blocksLayer.current.setVisible(showBlocks);
     }
-  },[showBlocks])
+  }, [showBlocks]);
+
+  useEffect(() => {
+    if (activeBedLayer.current && currentStreetBed && currentStreetBed.geom) {
+      const bedFeature = deSerializeGeom(currentStreetBed.geom);
+      activeBedLayer.current.getSource().clear();
+      activeBedLayer.current.getSource().addFeature(bedFeature);
+    }
+  }, [currentStreetBed]);
+
+  useEffect(() => {
+    if (completedLayer.current) {
+      completedLayer.current.getSource().clear();
+      completedLayer.current
+        .getSource()
+        .addFeatures(
+          completedStreets.map(street => deSerializeGeom(street.geom)),
+        );
+    }
+  }, [completedStreets]);
 
   useEffect(() => {
     selectedStreetLayer.current = new VectorLayer({
@@ -106,11 +147,30 @@ export default function MapContainer(props) {
       }),
     });
 
+    if (selectedStreet) {
+      selectedStreetLayer.current
+        .getSource()
+        .addFeature(deSerializeGeom(selectedStreet.geom));
+    }
+
     blocksLayer.current = new VectorLayer({
       source: new VectorSource({}),
+      visibile: showBlocks,
       style: new Style({
         stroke: new Stroke({
           color: 'red',
+          width: 5,
+        }),
+      }),
+    });
+
+    completedLayer.current = new VectorLayer({
+      source: new VectorSource({
+        features: completedStreets.map(s => deSerializeGeom(s.geom)),
+      }),
+      style: new Style({
+        stroke: new Stroke({
+          color: 'yellow',
           width: 5,
         }),
       }),
@@ -121,7 +181,7 @@ export default function MapContainer(props) {
       style: new Style({
         stroke: new Stroke({
           color: 'red',
-          width: 5,
+          width: 2,
         }),
         fill: new Fill({
           color: 'rgba(1,0,0,0.6)',
@@ -129,6 +189,25 @@ export default function MapContainer(props) {
       }),
     });
 
+    bedLayer.current = new VectorLayer({
+      source: new VectorSource({}),
+      style: new Style({
+        stroke: new Stroke({
+          color: 'blue',
+          width: 2,
+        }),
+        fill: new Fill({
+          color: 'rgba(0,0,1,0.6)',
+        }),
+      }),
+    });
+
+    if (currentStreetBed && street && street.feature) {
+      console.log(currentStreetBed, street);
+      selectedStreetLayer.current
+        .getSource()
+        .addFeature(constructBedGeometry(currentStreetBed, street));
+    }
 
     gpsLayer.current = new VectorLayer({
       name: 'gps',
@@ -143,40 +222,40 @@ export default function MapContainer(props) {
     });
 
     activeStreetLayer.current = new VectorLayer({
-        name:'activeStreet',
-        visible:'true',
-        source: new VectorSource({wrapX:false}),
-        style: (feature)=>{
+      name: 'activeStreet',
+      visible: 'true',
+      source: new VectorSource({wrapX: false}),
+      style: feature => {
+        const coords = feature.getGeometry().getCoordinates();
+        const dx = coords[0][0] - coords[1][0];
+        const dy = coords[0][1] - coords[1][1];
 
-            const coords  = feature.getGeometry().getCoordinates()
-            const dx = coords[0][0] - coords[1][0]
-            const dy = coords[0][1] - coords[1][1]
+        const midX = (coords[0][0] + coords[1][0]) / 2;
+        const midY = (coords[0][1] + coords[1][1]) / 2;
 
-            const midX = (coords[0][0] + coords[1][0])/2
-            const midY = (coords[0][1] + coords[1][1])/2
+        const rotation = Math.atan2(dy, dx);
+        const {direction, side} = feature.getProperties();
 
-            const rotation = Math.atan2(dy,dx)
-            const {direction, side } = feature.getProperties()
-
-            return [
-                new Style({
-                    stroke: new Stroke({
-                      color: 'green',
-                      width: 5,
-                    }),
-                }),
-                new Style({
-                    geometry: new Point([midX,midY]),
-                    image: new Icon({
-                        src: 'https://openlayers.org/en/latest/examples/data/arrow.png',
-                        anchor: [0.75,0.5],
-                        rotateWithView:true,
-                        rotation: direction ==='Forward' ?  -rotation : Math.PI - rotation
-                    })
-                })
-            ]
-        }
-    })
+        return [
+          new Style({
+            stroke: new Stroke({
+              color: 'green',
+              width: 5,
+            }),
+          }),
+          new Style({
+            geometry: new Point([midX, midY]),
+            image: new Icon({
+              src: 'https://openlayers.org/en/latest/examples/data/arrow.png',
+              anchor: [0.75, 0.5],
+              rotateWithView: true,
+              rotation:
+                direction === 'Backward' ? -rotation : Math.PI - rotation,
+            }),
+          }),
+        ];
+      },
+    });
 
     directionLayer.current = new VectorLayer({
       name: 'direction',
@@ -194,7 +273,10 @@ export default function MapContainer(props) {
         blocksLayer.current,
         selectedStreetLayer.current,
         activeStreetLayer.current,
-        directionLayer.current
+        activeBedLayer.current,
+        bedLayer.current,
+        directionLayer.current,
+        completedLayer.current
       ],
       view: new View({
         center: fromLonLat(props.initalPosition),
@@ -216,6 +298,12 @@ export default function MapContainer(props) {
   }, []);
 
   useEffect(() => {
+    const features = streetBeds.map(bed => deSerializeGeom(bed.geom));
+    bedLayer.current.getSource().clear();
+    bedLayer.current.getSource().addFeatures(features);
+  }, [streetBeds, street]);
+
+  useEffect(() => {
     if (gpsPosition) {
       const coords = gpsPosition.coords;
       props.onGPSUpdated([coords.longitude, coords.latitude]);
@@ -231,34 +319,34 @@ export default function MapContainer(props) {
   }, [zoomToExtent]);
 
   useEffect(() => {
+    blocksLayer.current.getSource().clear();
     if (blockFeatures && map.current) {
       const featureSet = new GeoJSON().readFeatures(blockFeatures, {
         featureProjection: 'EPSG:3857',
       });
-      blocksLayer.current.getSource().clear();
       blocksLayer.current.getSource().addFeatures(featureSet);
     }
   }, [blockFeatures, map.current]);
 
+  useEffect(() => {
+    activeStreetLayer.current.getSource().clear();
+    if (street.geom) {
+      const activeStreet = new Feature({
+        geometry: deSerializeGeom(street.geom).getGeometry(),
+        ...street,
+      });
 
-  useEffect(()=>{
-    console.log("UPDATING STREET ", street)
-    if(street.feature){
-
-        const activeStreet = new Feature(
-            {...street.feature.getProperties(), direction: street.direction,
-            side:street.side}
-        )
-        activeStreetLayer.current.getSource().clear()
-        activeStreetLayer.current.getSource().addFeature(activeStreet)
-        //const rotation = street 
-        //directionLayer.
+      activeStreetLayer.current.getSource().addFeature(activeStreet);
     }
-
-  },[street])
+  }, [street]);
 
   useEffect(() => {
-    getGeoJSON('select * from new_york_blocks').then(result => {
+    getGeoJSON(`select wkb_geometry as geom, 
+                 block_id as id,
+                 nta_name, 
+                 ST_LENGTH(wkb_geometry::GEOGRAPHY) as linelength
+                 from new_york_blocks`).then(result => {
+      console.log(result);
       setBlockFeatures(result);
     });
   }, []);
@@ -281,17 +369,18 @@ export default function MapContainer(props) {
         }}
         onClick={centerMapOnGPS}
       />
-      {selectStreetActive &&
-      <TargetIcon
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          fontSize: 40,
-          color: 'rgb(153, 202, 62)',
-          transform: 'translate3D(-50%,-50%,0)',
-        }}
-      />}
+      {selectStreetActive && (
+        <TargetIcon
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            fontSize: 40,
+            color: 'rgb(153, 202, 62)',
+            transform: 'translate3D(-50%,-50%,0)',
+          }}
+        />
+      )}
     </div>
   );
 }

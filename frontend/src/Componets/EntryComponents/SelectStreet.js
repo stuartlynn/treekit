@@ -1,28 +1,24 @@
 import React, {useState} from 'react';
 
 export default function SelectStreetStartPoint(props) {
-  const {selectedStreet} = props.data.map;
-
+  const {street} = props.data;
+  
   const submit = ()=>{
-    const extent = selectedStreet.getGeometry().getExtent();
-    const {id, linelength} = selectedStreet
-
-    props.onSubmit({
-        extent,
-        id,
-        linelength,
-        feature: selectedStreet
-    })
+    if(props.onSubmit){
+        props.onSubmit(street)
+        
+    }
   }
+  console.log('street is ',street)
   return (
     <div>
       <h3>
         Place the marker over the street to select the one you want to work om{' '}
       </h3>
-      {selectedStreet && 
+      {street && 
          <div>
-          <p>Street ID: {selectedStreet.getProperties().id}</p>
-          <p>Street Length: {selectedStreet.getProperties().linelength.toFixed(2)}m</p>
+          <p>Street: {street.name}</p>
+          <p>Street Length: {street.length.toFixed(2)}m</p>
         </div>
       }
       <button onClick={submit}>Submit</button>
