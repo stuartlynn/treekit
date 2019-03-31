@@ -6,4 +6,4 @@ WORKDIR /src
 RUN yarn 
 
 ENV PATH ./node_modules/.bin:$PATH
-CMD ["yarn","start"]
+CMD ["./wait-for-it","database:5432","--","yarn","start"]

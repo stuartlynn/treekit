@@ -20,14 +20,28 @@ services:
       dockerfile: Dockerfile 
     ports:
       - 3001:3000
+    expose:
+      - 3000
     networks:
       - treekit
     volumes:
       - ./api:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - PGHOST=database
+      - PGPPORT=5432
+      - PGPASSWORD=docker
+      - PGUSER=docker
+      - PGDATABASE=docker
   tiler:
     build:
       context: ./tiler
       dockerfile: Dockerfile
+    volumes:
+      - ./tiler:/src
+      - /src/node_modules
+    expose:
+      - "8886"
     ports:
       - "8886:8886"
     depends_on:
@@ -40,6 +54,18 @@ services:
     networks:
       - treekit
 
+  reverse-proxy:
+    image: nginx
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./proxy/nginx.config:/etc/nginx/nginx.conf
+    networks:
+      - treekit
+    depends_on:
+      - api
+      - frontend
   frontend:
     build:
       context: ./frontend
@@ -48,6 +74,8 @@ services:
       - ./frontend:/usr/src/app
     networks:
       - treekit
+    expose:
+      - 3000
     ports:
       - 3000:3000
 
