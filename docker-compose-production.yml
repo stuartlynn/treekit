@@ -18,7 +18,7 @@ services:
     build:
       context: ./api 
       dockerfile: Dockerfile.prod 
-    image: treekit/api:$TAG
+    image: stuartlynn/treekit-api:$TAG
     expose:
       - 3000
     networks:
@@ -33,7 +33,7 @@ services:
     build:
       context: ./tiler
       dockerfile: Dockerfile
-    image: treekit/tiler:$TAG 
+    image: stuartlynn/treekit-tiler:$TAG 
     expose:
       - "8886"
     depends_on:
@@ -50,7 +50,7 @@ services:
     build: 
       context: ./proxy
       dockerfile: Dockerfile.prod
-    image: nginx
+    image: stuartlynn/treekit-proxy:$TAG
     ports:
       - 80:80
       - 443:443
@@ -63,7 +63,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.prod
-    image: treekit/frontend:$TAG
+    image: stuartlynn/treekit-frontend:$TAG
     networks:
       - treekit
     expose:
