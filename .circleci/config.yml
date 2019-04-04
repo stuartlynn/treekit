@@ -18,5 +18,5 @@ jobs:
           name: Deploy 
           command: |
             export 'DOCKER_HOST=OCEAN_HOST'
-            DOCKER_HOST=ssh://root@$OCEAN_HOST docker-compose pull 
-            DOCKER_HOST=ssh://root@$OCEAN_HOST docker-compose up -d 
+            DOCKER_HOST=ssh://root@$OCEAN_HOST_IP docker-compose pull 
+            DOCKER_HOST=ssh://root@$OCEAN_HOST_IP docker-compose up -d 
