@@ -1,28 +1,23 @@
 version: 2
 jobs:
   build:
-    docker:
-      - image: docker:17.05.0-ce-git
+    machine: true
+    working_directory: ~/repo
 
     steps:
       - checkout
       - run:
-          name: Install Docker Compose
-          command: |
-            apk update && apk add curl curl-dev bash
-            curl -L https://github.com/docker/compose/releases/download/1.19.0/docker-compose-`uname -s`-`uname -m` > ~/docker-compose
-            chmod +x ~/docker-compose
-      - setup_remote_docker
-      - run:
           name: Build images
           command: |
+            docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
             echo 'export TAG=0.1.${CIRCLE_BUILD_NUM}' >> $BASH_ENV
-            ~/docker-compose -f docker-compose-production.yml build 
-            ~/docker-compose -f docker-compose-production.yml push
+            echo 'building with tag TAG=0.1.${CIRCLE_BUILD_NUM}'
+            TAG=0.1.${CIRCLE_BUILD_NUM} docker-compose -f docker-compose-production.yml build 
+            TAG=0.1.${CIRCLE_BUILD_NUM} docker-compose -f docker-compose-production.yml push
       - run:
           name: Deploy 
           command: |
             scp docker-compose-production.yml root@$host:~/docker-compose.yml
             export 'DOCKER_HOST=$host'
-            ~/docker-compose pull 
-            ~/docker-compose up -d 
+            docker-compose pull 
+            docker-compose up -d 
