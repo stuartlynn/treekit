@@ -46,7 +46,6 @@ export default function Contribute(props) {
 	}
   })()
 
-
   console.log("ZOOM TO FEATURE ", zoomToFeature, focusOn)
 
   const onSelectCentralFeature = (feature)=>{

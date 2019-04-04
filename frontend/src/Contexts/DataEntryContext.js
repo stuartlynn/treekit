@@ -75,8 +75,10 @@ const reducer = (state, action) => {
     case 'SAVE_ACTIVE_TREE':
       //console.log('updating MAP Property ', action);
       return {...state, trees: [...state.trees, state.tree]};
+
 	case 'SET_FOCUS':
 		return {...state,focusOn : payload} 
+
     case 'START_ACTIVE_BED':
       return {
         ...state,

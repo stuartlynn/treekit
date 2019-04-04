@@ -28,6 +28,7 @@ const SelectedStreetStyle = new Style({
     })
 })
 
+
 export const StreetStyle = (options) => (feature,zoom) =>{
     const state = feature.get('state')
     if(options && feature.get('id') === options.selectedId){
