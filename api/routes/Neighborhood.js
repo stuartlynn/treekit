@@ -23,6 +23,7 @@ export default models => {
         },
         ...offset,
         ...limit,
+
       });
       res.json(projects);
     } catch (err) {
