@@ -1,0 +1,22 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: debian:stretch
+
+    steps:
+      - checkout
+
+      - run:
+          name: Build images
+          command: |
+            echo 'export TAG=0.1.${CIRCLE_BUILD_NUM}' >> $BASH_ENV
+            docker-compose -f docker-compose-production.yml build 
+            docker-compose -f docker-compose-production.yml push
+      - run:
+          name: Deploy 
+          command: |
+            scp docker-compose-production.yml root@$host:~/docker-compose.yml
+            export 'DOCKER_HOST=$host'
+            docker-compose pull 
+            docker-compose up -d 
