@@ -17,7 +17,6 @@ jobs:
       - run:
           name: Deploy 
           command: |
-            scp docker-compose-production.yml root@$host:~/docker-compose.yml
-            export 'DOCKER_HOST=$host'
-            docker-compose pull 
-            docker-compose up -d 
+            export 'DOCKER_HOST=OCEAN_HOST'
+            DOCKER_HOST=ssh://root@$OCEAN_HOST docker-compose pull 
+            DOCKER_HOST=ssh://root@$OCEAN_HOST docker-compose up -d 
