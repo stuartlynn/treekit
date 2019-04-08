@@ -17,6 +17,5 @@ jobs:
       - run:
           name: Deploy 
           command: |
-            export 'DOCKER_HOST=OCEAN_HOST'
-            DOCKER_HOST=ssh://root@$OCEAN_HOST_IP docker-compose pull 
-            DOCKER_HOST=ssh://root@$OCEAN_HOST_IP docker-compose up -d 
+            scp repo/docker-compose-deploy.yml root@${OCEAN_HOST_IP}:~/docker-compose.yml
+            ssh root@${OCEAN_HOST_IP} 'TAG=0.1.${CIRCLE_BUILD_NUM} docker-compose up -d'

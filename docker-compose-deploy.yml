@@ -1,0 +1,63 @@
+version: '3'
+
+services:
+  database:
+    image: kartoza/postgis
+    environment:
+      - ALLOW_IP_RANGE=0.0.0.0/0
+      - POSTGRES_USER=docker
+      - POSTGRES_PASSWORD=docker
+      - POSTGRES_DB=docker
+    volumes:
+      - treekit_db_data:/var/lib/postgresql/data
+    expose:
+      - 5432
+    networks:
+      - treekit
+  api:
+    image: stuartlynn/treekit-api:$TAG
+    expose:
+      - 3000
+    networks:
+      - treekit
+    environment:
+      - PGHOST=database
+      - PGPPORT=5432
+      - PGPASSWORD=docker
+      - PGUSER=docker
+      - PGDATABASE=docker
+  tiler:
+    image: stuartlynn/treekit-tiler:$TAG 
+    expose:
+      - "8886"
+    depends_on:
+      - database
+    environment:
+      - PGHOST=database
+      - PGPPORT=5432
+      - PGPASSWORD=docker
+      - PGUSER=docker
+    networks:
+      - treekit
+
+  reverse-proxy:
+    image: stuartlynn/treekit-proxy:$TAG
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - treekit
+    depends_on:
+      - api
+      - frontend
+  frontend:
+    image: stuartlynn/treekit-frontend:$TAG
+    networks:
+      - treekit
+    expose:
+      - 3000
+
+networks:
+  treekit:
+volumes:
+  treekit_db_data:
