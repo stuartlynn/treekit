@@ -20,3 +20,11 @@ jobs:
             scp docker-compose-deploy.yml root@${OCEAN_HOST_IP}:~/docker-compose.yml
             ssh root@${OCEAN_HOST_IP} "TAG=0.1.${CIRCLE_BUILD_NUM} docker-compose down "
             ssh root@${OCEAN_HOST_IP} "TAG=0.1.${CIRCLE_BUILD_NUM} docker-compose up -d"
+      - run:
+          name: Populate DB 
+          command: |
+            scp data.tar.gz root@${OCEAN_HOST_IP}:~/data.tar.gz
+            scp populate_data.sh root@${OCEAN_HOST_IP}:~/populate_data.sh
+            ssh root@${OCEAN_HOST_IP} "tar xzvf data.tar.gz"
+            ssh root@${OCEAN_HOST_IP} " TAG=0.1.${CIRCLE_BUILD_NUM} ./populate_data.sh"
+
