@@ -72,12 +72,13 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./frontend:/usr/src/app
+      - /usr/src/app/node_modules
     networks:
       - treekit
     expose:
       - 3000
     ports:
-      - 3000:3000
+      - 3010:3000
 
 networks:
   treekit:
