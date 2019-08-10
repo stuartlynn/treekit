@@ -24,7 +24,20 @@ export default function Projects(props) {
   return (
     <div className="page">
       <h1>Projects</h1>
-      <GridList cellHeight={180}>
+
+      <div className='projectList'>
+          {projects.map((p)=>
+            <div className='projectDetails' style={{backgroundImage: `url("${p.img}")`}}>
+                <div className='info'>
+                    <Link to={`/projects/${p.slug}`}>
+                        <h3>{p.name}</h3>
+                    </Link>
+              </div>
+            </div>
+          )}
+      </div>
+   
+      {/*<GridList cellHeight={180}>
         <GridListTile key="Subheader" cols={2} style={{height: 'auto'}}>
           <ListSubheader component="div">Projects</ListSubheader>
         </GridListTile>
@@ -36,7 +49,7 @@ export default function Projects(props) {
             </GridListTile>
           </Link>
         ))}
-      </GridList>
+      </GridList> */}
     </div>
   );
 }

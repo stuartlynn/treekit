@@ -10,6 +10,7 @@ import Project from './Pages/Project'
 import SpeciesPickerPage from './Pages/SpeciesPickerPage'
 import SelfiePage from './Pages/SelfiePage'
 import ContributePage from './Pages/Contribute'
+import YourTrees from './Pages/YourTrees'
 import Home from './Pages/Home'
 
 import './App.css';
@@ -28,6 +29,7 @@ export default function App(props) {
           <NeighborhoodPage path='/neighbordhood/:id' />
           <ContributePage path='/neighbordhood/:id/contribute' />
           <MapTestPage path='/maptest' />
+          <YourTrees path='/your_trees' />
       </Router>
     </div>
   );

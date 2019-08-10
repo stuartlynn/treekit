@@ -5,7 +5,10 @@ export default function SelectStreetStartPoint(props) {
   
   const submit = ()=>{
     if(props.onSubmit){
-        props.onSubmit(street)
+        delete street.geometry 
+        props.onSubmit({
+           street
+        })
         
     }
   }

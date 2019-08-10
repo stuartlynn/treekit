@@ -9,6 +9,7 @@ import FindLocationIcon from '@material-ui/icons/LocationSearching';
 import TargetIcon from '@material-ui/icons/MyLocation';
 import DetailsFlow from '../Componets/DetailsFlow';
 import {DataEntryStore} from '../Contexts/DataEntryContext';
+import {SavedResultsStore} from '../Contexts/SavedResultsContext';
 import {useCurrentPosition} from 'react-use-geolocation';
 import {constructBedGeometry} from '../Utils'
 
@@ -30,6 +31,7 @@ export default function Contribute(props) {
   const mapDiv = useRef(null);
   const neighborhoodId = props.id;
   const [state, dispatch] = useContext(DataEntryStore);
+  const [_, savedResultsDispatch] = useContext(SavedResultsStore);
 
   const {neighborhood} = useNeighborhood(neighborhoodId);
   const {streets} = useNeighborhoodStreets(neighborhoodId);
@@ -37,6 +39,7 @@ export default function Contribute(props) {
   const [gpsPosition, error] = useCurrentPosition();
   const {street,focusOn, stage, currentStreetBed, streetBeds } = state;
   const {showBlocks,showCurrentBed} = state.map;
+
   const zoomToFeature  = (()=>{
 	switch(focusOn){
 		case "street":
@@ -158,10 +161,10 @@ export default function Contribute(props) {
           data={state}
           dispatch={dispatch}
           onDone={result => {
-            //savedResultsDispatch({
-            //type: 'ADD_RESULT',
-            //payload: result
-            //})
+            savedResultsDispatch({
+              type: 'ADD_RESULT',
+              payload: result
+            })
           }}
         />
       </div>

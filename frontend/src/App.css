@@ -35,6 +35,47 @@ h1,h2,h3{
   color: #61dafb;
 }
 
+
+.projectDetails{
+  min-height: 300px;
+  background-size: auto 300px 
+
+}
+
+.projectDetails h3{
+  display:relative;
+  box-sizing: border-box;
+  padding: 20px;
+  background-color: rgba(0.0,0.0,0.0, 0.7)
+}
+
+.features{
+   min-height: 20%;
+   box-sizing: border-box;
+   padding: 20px 10px;
+}
+
+.homePage button{
+ width: 70%;
+}
+
+button{
+   box-sizing: border-box;
+   font-weight:bold;
+   padding: 10px 20px;
+   background-color: #ca3e99;
+   color:white;
+   border: 0;
+   border-radius: 10px;
+}
+
+.homePage{
+  display: flex;
+  flex-direction: column;
+  box-sizing : border-box;
+  padding: 10px 20px;
+
+}
 .page{
     width:100%;
     height: 100%;

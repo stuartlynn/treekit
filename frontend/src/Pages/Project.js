@@ -15,7 +15,7 @@ export default function Project(props) {
       {project && 
 		<React.Fragment>
 			<h1>{project.name}</h1>
-			{neighborhoods && neighborhoods.map(nh=>(
+            {neighborhoods && neighborhoods.sort((a,b)=>(a.name< b.name) ? -1 : (a.name > b.name) ? 1 : 0 ).map(nh=>(
 				<Link to={`/neighbordhood/${nh.id}`}>
 					<p key={nh.name} >{nh.name}</p>	
 				</Link>
