@@ -84,12 +84,17 @@ export default function(props) {
       component: BedLocation,
       next: 'Species',
 	  onActivate: ()=>{
+        dispatch({
+           type: 'UPDATE_MAP',
+           payload:{
+              showCurrentBed:true
+           }
+        })
 	  },
       onChange: updates => {
-        const bed = constructBedGeometry({...data.currentStreetBed, ...updates}, props.data.street)
         dispatch({
           type: 'UPDATE_ACTIVE_BED',
-          payload: {...updates,geom:bed}
+          payload: {...updates}
         });
       },
     },

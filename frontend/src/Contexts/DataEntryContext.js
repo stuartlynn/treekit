@@ -44,6 +44,7 @@ const initalState = {
     streetSelectActive: true,
     position: null,
     showBlocks: true,
+    showCurrentBed: false,
   },
 };
 

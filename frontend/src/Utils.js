@@ -47,7 +47,7 @@ export const constructBedGeometry = (bedDetails, street) => {
   const geojson = new GeoJSON();
   const {direction, side} = street;
   const {width, depth, distance, absoluteStart,absoluteEnd} = bedDetails;
-  const streetFeature = deSerializeGeom(street.geom)
+  const streetFeature =  street.geom // deSerializeGeom(street.geom)
     
   const proj = {
     featureProjection: 'EPSG:3857',
@@ -55,18 +55,23 @@ export const constructBedGeometry = (bedDetails, street) => {
   };
 
 
-  let linestring = geojson.writeFeatureObject(streetFeature, proj);
+  let linestring = street.geom // geojson.writeFeatureObject(streetFeature, proj);
+
+
   if(direction === 'Backward'){
-    linestring = turfReverse(linestring)
+    linestring = turfReverse({'type' : 'Feature', 'properties': {}, 
+    'geometry' : street.geom}).geometry
   }
-  const lineStartPoint = linestring.geometry.coordinates[1];
-  const lineEndPoint = linestring.geometry.coordinates[0];
-    
+
+  const lineStartPoint = linestring.coordinates[1];
+  const lineEndPoint = linestring.coordinates[0];
+
   const bedStartPointLine = turf.along(linestring, absoluteStart, {units: 'meters'});
   const bedEndPointLine = turf.along(linestring, absoluteEnd, {
     units: 'meters',
   });
 
+ 
   const bearing = turf.bearing(lineStartPoint, lineEndPoint);
 
   let bearingPerp = bearing + ( side ==='Left' ? 90 : -90) ;
@@ -94,7 +99,8 @@ export const constructBedGeometry = (bedDetails, street) => {
     ],
   ]);
 
-  return serializeGeom(geojson.readFeature(resultGeoJSON, proj));
+ // const feature = geojson.readFeature(resultGeoJSON, proj)
+  return {resultGeoJSON, geom: resultGeoJSON.geometry};
 };
 
 

@@ -4,12 +4,14 @@ import useOSMLayer from '../Hooks/useOSMLayer';
 import useNeighborhood from '../Hooks/useNeighborhood';
 import useNeighborhoodStreets from '../Hooks/useNeighborhoodStreets';
 import useGeoJSONLayer from '../Hooks/useGeoJSONLayer';
-import {NeighborhoodStyleSimple, StreetStyle} from '../MapStyles';
+import {NeighborhoodStyleSimple, StreetStyle, CurrentBedStyle, BedStyle} from '../MapStyles';
 import FindLocationIcon from '@material-ui/icons/LocationSearching';
 import TargetIcon from '@material-ui/icons/MyLocation';
 import DetailsFlow from '../Componets/DetailsFlow';
 import {DataEntryStore} from '../Contexts/DataEntryContext';
 import {useCurrentPosition} from 'react-use-geolocation';
+import {constructBedGeometry} from '../Utils'
+
 
 const featureStyle = {
   zIndex: 10,
@@ -33,8 +35,8 @@ export default function Contribute(props) {
   const {streets} = useNeighborhoodStreets(neighborhoodId);
 
   const [gpsPosition, error] = useCurrentPosition();
-  const {street,focusOn, stage } = state;
-
+  const {street,focusOn, stage, currentStreetBed, streetBeds } = state;
+  const {showBlocks,showCurrentBed} = state.map;
   const zoomToFeature  = (()=>{
 	switch(focusOn){
 		case "street":
@@ -46,8 +48,7 @@ export default function Contribute(props) {
 	}
   })()
 
-  console.log("ZOOM TO FEATURE ", zoomToFeature, focusOn)
-
+  console.log('StAGE IS ',stage)
   const onSelectCentralFeature = (feature)=>{
         if (feature) {
           dispatch({
@@ -68,7 +69,7 @@ export default function Contribute(props) {
   );
 
   useOSMLayer(map);
-
+ 
   useGeoJSONLayer(
     map,
     'neighborhood',
@@ -83,7 +84,12 @@ export default function Contribute(props) {
     map,
     'streets',
     streets ? streets : [],
-    StreetStyle({selectedId: street.id}),
+    StreetStyle({
+       selectedId: street.id ,
+       onlySelected: !showBlocks,
+       showArrow: stage == 'SelectStreetDetails',
+       arrowDirection: street.direction 
+    }),
     street,
     20,
     true,
@@ -91,6 +97,30 @@ export default function Contribute(props) {
       onCenterFeature: stage=='SelectStreet' ? onSelectCentralFeature : null 
     },
   );
+
+  useGeoJSONLayer(
+    map,
+    'street_beds',
+    streetBeds ? streetBeds.map((bed)=>constructBedGeometry(bed,street)): [],
+    BedStyle,
+    null,
+    22,
+    true,
+    {}
+  )
+ 
+
+
+  useGeoJSONLayer(
+    map,
+    'current_street_bed',
+    showCurrentBed ? [constructBedGeometry(currentStreetBed, street )] : [],
+    CurrentBedStyle,
+    null,
+    22,
+    true,
+    {}
+  )
 
   const centerMapOnGPS = () => {};
 
